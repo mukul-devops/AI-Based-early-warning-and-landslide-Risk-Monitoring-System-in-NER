@@ -1,0 +1,18 @@
+# Environments
+.myenv/
+.env
+__pycache__/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Database files
+*.db
+*.sqlite3
+
+# OS files
+.DS_Store
+
+# Data (Optional: uncomment if your CSVs are too large for GitHub)
+data/raw/
+data/processed/
