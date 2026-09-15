@@ -67,3 +67,33 @@ Traditional warning systems suffer from **geographical generalization**—issuin
 ---
 
 ## 🎯 Key System Capabilities
+
+*   **Geomorphological Feature Engineering:** Feeds dynamic slope angle ($\beta$), elevation ($h$), shear stress index, and pore pressure ratios directly into inference pipelines.
+*   **Decoupled GeoJSON Pipeline:** Employs an automated conversion layer transforming raw spatial PostGIS records into browser-renderable `FeatureCollection` structures without freezing the event loop.
+*   **Dynamic Weather Simulation:** Integrated sandbox interface enabling disaster authorities to simulate arbitrary rainfall spikes (e.g., $150\text{ mm}$ over $72\text{ hours}$) and visualize cascading slope destabilization in real time.
+*   **Emergency Resource Dispatcher:** Automates priority routing for National Disaster Response Force (NDRF) squads with built-in population risk matrices.
+
+---
+
+## 📊 AI Threat Classification Matrix
+
+| Risk Tier | Probability Threshold | Color Representation | Operational Protocol |
+| :---: | :---: | :---: | :--- |
+| **Low Risk** | $< 0.25$ | `🟩 Emerald` | Baseline monitoring; regular highway clearance updates. |
+| **Moderate Caution** | $0.25 - 0.50$ | `🟨 Amber` | Pre-alert SDMA local units; advisory speed restrictions on ghat roads. |
+| **High Alert** | $0.50 - 0.75$ | `🟧 Orange` | Stage emergency excavators at high-risk points along NH-06/NH-44. |
+| **Severe Imminent Hazard** | $\ge 0.75$ | `🟥 Crimson` | Total transit shutdown, automated siren triggers, mandatory village evacuations. |
+
+---
+
+## 🚀 Quickstart & Local Setup
+
+### Prerequisites
+*   Node.js `v18+`
+*   Python `v3.10+`
+*   PostgreSQL with PostGIS extensions enabled (or Supabase instance)
+
+### 1. Clone the Monorepo
+```bash
+git clone [https://github.com/your-username/AI-Based-early-warning-and-landslide-Risk-Monitoring-System-in-NER.git](https://github.com/your-username/AI-Based-early-warning-and-landslide-Risk-Monitoring-System-in-NER.git)
+cd AI-Based-early-warning-and-landslide-Risk-Monitoring-System-in-NER
