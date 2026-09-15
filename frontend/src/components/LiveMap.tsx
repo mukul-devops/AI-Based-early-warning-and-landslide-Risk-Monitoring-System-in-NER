@@ -14,7 +14,7 @@ function getRiskLabel(level: string, t: (key: string) => string): string {
 }
 
 function RiskPopup({ zone, t, onPrioritize }: { zone: RiskZone; t: (key: string) => string; onPrioritize: () => void }) {
-  const colors = riskColors[zone.riskLevel];
+  const colors = riskColors[zone.riskLevel] || riskColors['low'];
   return (
     <div className="min-w-[200px]">
       <div className={`px-3 py-2 rounded-t-lg ${colors.bg} border-b ${colors.border}`}>
@@ -32,7 +32,7 @@ function RiskPopup({ zone, t, onPrioritize }: { zone: RiskZone; t: (key: string)
         <div className="flex items-center justify-between">
           <span className="text-xs text-slate-400 flex items-center gap-1"><Route className="w-3 h-3" /> {zone.roadName}</span>
           <span className={`text-xs font-semibold ${
-            zone.roadStatus === 'Blocked' ? 'text-red-400' : zone.roadStatus === 'Partially Clear' || zone.roadStatus === 'Partially Clear' ? 'text-orange-400' : 'text-emerald-400'
+            zone.roadStatus === 'Blocked' ? 'text-red-400' : zone.roadStatus === 'Partially Clear' ? 'text-orange-400' : 'text-emerald-400'
           }`}>{zone.roadStatus}</span>
         </div>
         <div className="flex items-center justify-between">
@@ -68,12 +68,44 @@ export default function LiveMap({ simResult }: { simResult: SimResult | null }) 
         if (!res.ok) throw new Error('Fetch failed');
         return res.json();
       })
-      .then((data: RiskZone[]) => {
-        setRiskZones(data);
+      .then((data: any) => {
+        // FIX: Detect GeoJSON and flatten it into the array format React expects
+        if (data && data.type === 'FeatureCollection' && Array.isArray(data.features)) {
+          const formattedZones: RiskZone[] = data.features.map((feature: any, index: number) => {
+            
+            // Map the Python backend string (e.g. "High Alert") to the frontend color key ("high")
+            let rawRisk = feature.properties?.risk_level || feature.properties?.riskLevel || 'low';
+            let mappedRisk = 'low';
+            if (rawRisk.toLowerCase().includes('severe')) mappedRisk = 'severe';
+            else if (rawRisk.toLowerCase().includes('high')) mappedRisk = 'high';
+            else if (rawRisk.toLowerCase().includes('moderate')) mappedRisk = 'moderate';
+
+            return {
+              id: feature.id || feature.properties?.id || String(index),
+              name: feature.properties?.location_name || feature.properties?.name || 'Unknown Zone',
+              lat: feature.geometry.coordinates[1], // GeoJSON stores [longitude, latitude]
+              lon: feature.geometry.coordinates[0],
+              riskLevel: mappedRisk as RiskZone['riskLevel'],
+              riskScore: feature.properties?.risk_score || feature.properties?.riskScore || 0.1,
+              roadName: feature.properties?.road_name || feature.properties?.roadName || 'Local Road',
+              roadStatus: feature.properties?.road_status || feature.properties?.roadStatus || 'Clear',
+              rainfall72h: feature.properties?.rainfall_72h || feature.properties?.rainfall72h || 0,
+              population: feature.properties?.population || 1000,
+            };
+          });
+          setRiskZones(formattedZones);
+        } else if (Array.isArray(data)) {
+          // Fallback just in case it is already an array
+          setRiskZones(data);
+        } else {
+          setRiskZones([]);
+        }
         setError(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Map Data Fetch Error:", err);
         setError(true);
+        setRiskZones([]); // Pass empty array to prevent crash on failure
       })
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,7 +142,7 @@ export default function LiveMap({ simResult }: { simResult: SimResult | null }) 
           attribution=""
         />
         {riskZones.map((zone) => {
-          const colors = riskColors[zone.riskLevel];
+          const colors = riskColors[zone.riskLevel] || riskColors['low'];
           return (
             <Circle
               key={zone.id}
