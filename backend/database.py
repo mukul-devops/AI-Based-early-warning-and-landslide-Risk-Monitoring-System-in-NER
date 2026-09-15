@@ -1,11 +1,18 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# This URL contains the username, password, host, and database name we used in the Docker command
-DATABASE_URL = 'postgresql://postgres:mukul981242@db.tmvsdlmrlkkiigxxdhff.supabase.co:5432/postgres'
+# Load variables from .env file into the environment
+load_dotenv()
 
-# The engine is the main connection point to the database
-engine = create_engine(DATABASE_URL)
+# Read the secret URL; fall back to None or a default if missing
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
-# This will allow us to open "sessions" (conversations) with the database later
+if not SQLALCHEMY_DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set!")
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()

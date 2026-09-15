@@ -125,7 +125,17 @@ def get_risk_zones(db: Session = Depends(get_db)):
 # ---------------------------------------------------------
 # 6. LIVE AI INFERENCE ENGINE
 # ---------------------------------------------------------
+# 2. Add a GET route (eliminates the error when opening in browser)
+@app.get("/api/simulate-weather")
+def get_simulate_weather_info():
+    return {
+        "message": "Simulation endpoint is online. Send an HTTP POST request with JSON body: {'rainfall_mm': 120.0}",
+        "method_required": "POST"
+    }
+
+# 3. The POST Simulation Route (handles both trailing slash and no slash)
 @app.post("/api/simulate-weather")
+@app.post("/api/simulate-weather/")
 def simulate_weather(weather: WeatherSimulation, db: Session = Depends(get_db)):
     if model is None:
         return {"error": "Trained ML model bundle not found."}
@@ -134,18 +144,17 @@ def simulate_weather(weather: WeatherSimulation, db: Session = Depends(get_db)):
     updated_count = 0
 
     for zone in zones:
-        # Mocking terrain extraction for the prototype (ideally fetched from DB)
         slope = 34.0
         elev = 1150.0
 
-        # Calculate live physical geomorphological features
+        # Physical geomorphological features
         slope_rad = np.radians(slope)
         sin_slope = np.sin(slope_rad)
         shear_stress = sin_slope * (elev / 1000.0)
         pore_pressure = weather.rainfall_mm * np.tan(slope_rad)
         extreme_flag = 1 if weather.rainfall_mm > 50 else 0
 
-        # Format exactly as trained: ['rainfall_72h_mm', 'slope_angle_deg', 'elevation_m', 'shear_stress_index', 'pore_pressure_index', 'extreme_rain_flag']
+        # Array aligned with model training
         features = np.array([[
             weather.rainfall_mm,
             slope,
@@ -155,10 +164,10 @@ def simulate_weather(weather: WeatherSimulation, db: Session = Depends(get_db)):
             extreme_flag,
         ]])
 
-        # Get AI probability
+        # Inference
         prob = model.predict_proba(features)[0][1]
 
-        # Convert to official hazard levels
+        # Classification
         if prob >= 0.75:
             severity = "Severe Imminent Hazard"
         elif prob >= decision_threshold:
